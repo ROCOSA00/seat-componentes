@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PK-16 Criticidad y FTE</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f4f5f7; --surface:#fcfcfb; --surface-2:#f0efec; --border:#dcdbd6; --grid:#e6e5e0;
+  --text:#0b0b0b; --text-2:#52514e; --muted:#7a7974; --accent:#1f3864; --accent-2:#2a78d6;
+  --s1:#2a78d6; --s1-strong:#1c5cab; --s1-soft:#9ec5f4;
+  --A:#d03b3b; --B:#ec835a; --C:#fab219; --D:#0ca30c;
+  --ok-bg:#e3f4e3; --ok-fg:#0a6b0a; --warn-bg:#fff3d6; --warn-fg:#7a5200; --err-bg:#fbe4e4; --err-fg:#9c1c1c;
+  --pend-bg:#ecebe8; --pend-fg:#45443f; --of-bg:#ebe6f3; --dato-bg:#e3eefa; --sup-bg:#fff4d4;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#3a3a37; --grid:#2c2c2a;
+    --text:#ffffff; --text-2:#c3c2b7; --muted:#9a998f; --accent:#9ec5f4; --accent-2:#3987e5;
+    --s1:#3987e5; --s1-strong:#86b6ef; --s1-soft:#1c5cab;
+    --ok-bg:#16301a; --ok-fg:#7fd87f; --warn-bg:#3a2e0e; --warn-fg:#f5c862; --err-bg:#3a1717; --err-fg:#f29a9a;
+    --pend-bg:#2c2c2a; --pend-fg:#c3c2b7; --of-bg:#2d2638; --dato-bg:#1a2a3d; --sup-bg:#3a3214;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#3a3a37; --grid:#2c2c2a;
+  --text:#ffffff; --text-2:#c3c2b7; --muted:#9a998f; --accent:#9ec5f4; --accent-2:#3987e5;
+  --s1:#3987e5; --s1-strong:#86b6ef; --s1-soft:#1c5cab;
+  --ok-bg:#16301a; --ok-fg:#7fd87f; --warn-bg:#3a2e0e; --warn-fg:#f5c862; --err-bg:#3a1717; --err-fg:#f29a9a;
+  --pend-bg:#2c2c2a; --pend-fg:#c3c2b7; --of-bg:#2d2638; --dato-bg:#1a2a3d; --sup-bg:#3a3214;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;color:var(--accent);letter-spacing:.2px}
+header .sub{color:var(--text-2);font-size:12.5px}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.btn:hover{border-color:var(--accent-2)}
+.btn.primary{background:var(--accent-2);color:#fff;border-color:var(--accent-2)}
+nav{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:2px;overflow-x:auto;padding:0 12px}
+nav button{border:0;background:none;color:var(--text-2);padding:10px 12px;font:inherit;font-size:13.5px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--text);border-bottom-color:var(--accent-2);font-weight:600}
+main{max-width:1400px;margin:0 auto;padding:18px 16px 60px}
+section{display:none}
+section.on{display:block}
+h2{font-size:17px;margin:4px 0 4px;color:var(--text)}
+h3{font-size:14.5px;margin:18px 0 8px;color:var(--text)}
+p.lead{color:var(--text-2);margin:0 0 14px;max-width:1000px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.tile .lbl{color:var(--text-2);font-size:12.5px}
+.tile .val{font-size:26px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums;color:var(--text)}
+.tile .ppt{font-size:12px;color:var(--muted)}
+.principle{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.principle span{background:var(--of-bg);border-radius:8px;padding:6px 10px;font-weight:600;font-size:13px}
+.principle span.x{background:var(--dato-bg)}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.st-ok{background:var(--ok-bg);color:var(--ok-fg)} .st-warn{background:var(--warn-bg);color:var(--warn-fg)} .st-err{background:var(--err-bg);color:var(--err-fg)} .st-pend{background:var(--pend-bg);color:var(--pend-fg)}
+.cls{display:inline-flex;width:22px;height:22px;border-radius:6px;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#111}
+.cls.A{background:var(--A);color:#fff}.cls.B{background:var(--B)}.cls.C{background:var(--C)}.cls.D{background:var(--D);color:#fff}
+.cls.prov{outline:2px dashed var(--muted);outline-offset:1px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{position:sticky;top:0;background:var(--surface-2);color:var(--text-2);text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid var(--border);cursor:default}
+th.sort{cursor:pointer}
+td{padding:6px 8px;border-bottom:1px solid var(--grid);vertical-align:top;max-width:360px;overflow-wrap:anywhere}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+.tbl{max-height:560px;overflow:auto;border:1px solid var(--border);border-radius:10px}
+.of{background:var(--of-bg)} .dato{background:var(--dato-bg)} .sup{background:var(--sup-bg)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.filters input,.filters select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px}
+.filters input[type=search]{min-width:260px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.chart{width:100%;overflow:visible}
+.chart text{fill:var(--text-2);font-size:11.5px}
+.chart .val{fill:var(--text);font-weight:600}
+.chart .grid line{stroke:var(--grid)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2);margin:4px 0 6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+#tip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-size:12.5px;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transition:opacity .08s;z-index:50;max-width:340px}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--surface);border-left:1px solid var(--border);box-shadow:-8px 0 24px rgba(0,0,0,.18);transform:translateX(105%);transition:transform .18s;z-index:40;overflow:auto;padding:18px}
+.drawer.on{transform:none}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:4px 10px;font-size:13px}
+.kv div:nth-child(odd){color:var(--text-2)}
+.bar{height:10px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--s1);border-radius:4px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.flow span{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:12.5px;font-weight:600}
+.flow b{color:var(--muted)}
+.param{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;align-items:center;font-size:13px}
+.param input,.param select{width:100%;border:1px solid var(--border);background:var(--sup-bg);color:var(--text);border-radius:6px;padding:4px 6px;font:inherit;text-align:right}
+.param .chg{outline:2px solid var(--accent-2)}
+.warnbox{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:8px 10px;font-size:13px;margin:8px 0}
+.note{font-size:12px;color:var(--muted)}
+@media (max-width:700px){.g2{grid-template-columns:1fr} .kv{grid-template-columns:1fr} .filters input[type=search]{min-width:0;width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>PK-16 · Maestro de criticidad y dimensionamiento de mantenimiento</h1>
+    <div class="sub" id="hdrsub"></div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn" id="themeBtn" title="Cambiar tema">◐ Tema</button>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+<section id="resumen">
+  <div class="principle"><span>POWERPOINT FINAL = RESULTADO OFICIAL PRESENTADO</span><span class="x">MODELO = DATOS + CÁLCULOS + CRITERIOS + METODOLOGÍA + TRAZABILIDAD</span></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">Capas de la necesidad (FTE)</h3><p class="note">Base → carga → pérdidas → cobertura → necesidad frente a plantilla. Pasa el cursor por cada barra.</p><div id="wf"></div></div>
+    <div class="card"><h3 style="margin-top:0">Distribución A/B/C/D</h3>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px"><div><div class="small muted">Oficial (diap. 4)</div><div id="abcOf"></div></div><div><div class="small muted">Activo a activo (contraste, no oficial)</div><div id="abcTec"></div></div></div>
+    </div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">Mensajes clave</h3><ol id="msgs" style="margin:0;padding-left:18px"></ol></div>
+</section>
+
+<section id="inventario">
+  <h2>Inventario maestro</h2>
+  <p class="lead">Base única: SAP completo + fichero de montaje + cuellos sin equivalencia. Ningún registro se borra; los excluidos conservan estado y motivo. Pulsa una fila para ver su ficha completa.</p>
+  <div class="filters" id="invFilters"></div>
+  <div class="small muted" id="invCount" style="margin-bottom:6px"></div>
+  <div class="tbl"><table id="invTbl"></table></div>
+  <div style="margin-top:8px;display:flex;gap:8px"><button class="btn" id="invMore">Mostrar más</button><button class="btn" id="invCsv">Exportar CSV (filtro actual)</button></div>
+</section>
+
+<section id="criticidad">
+  <h2>Criticidad por grupo</h2>
+  <p class="lead">Score = C1 Producción (0–4) + C2 Seguridad/calidad (0–2) + C3 Unicidad/cuello (0–2) + C4 Averías 2025→ (0–1,5) + C5 Obsolescencia (0–0,5). A ≥ 8 · B 6–7,9 · C 3,5–5,9 · D &lt; 3,5. Cuello de botella, montaje principal y MEB crítico = A. La falta de información nunca da D (queda C provisional).</p>
+  <div class="card"><div class="legend" id="lgABC"></div><div id="stackGrp"></div></div>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">Tipologías de criticidad (valores base)</h3><div class="tbl" style="max-height:420px"><table id="tipTbl"></table></div></div>
+    <div class="card"><h3 style="margin-top:0">Activos con mayor score</h3><div class="tbl" style="max-height:420px"><table id="topSc"></table></div></div>
+  </div>
+</section>
+
+<section id="capacidad">
+  <h2>FTE, capacidad y escenarios</h2>
+  <p class="lead">Los valores de partida son los oficiales. Cambia cualquier supuesto para ver el efecto: el resultado se marca como ESCENARIO y no sustituye al oficial.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Supuestos</h3>
+      <div class="param" id="params"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="resetP">Restablecer oficial</button><button class="btn" data-r="min">Ratios mínimos (8/12/20/35)</button><button class="btn" data-r="med">Ratios medios</button></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Resultado</h3>
+      <div id="scenWarn"></div>
+      <div class="tbl" style="max-height:none"><table id="capTbl"></table></div>
+      <h3>Conciliación de la base de cobertura</h3>
+      <div class="tbl" style="max-height:none"><table id="cobTbl"></table></div>
+      <p class="note">El PPT usa tres bases distintas para el 15–25 %: ninguna reproduce a la vez todas sus cifras (ver Diferencias).</p>
+    </div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">Plantilla nominal frente a capacidad real</h3><div class="tbl" style="max-height:none"><table id="realTbl"></table></div>
+  <p class="note">Especialidades y turnos: PENDIENTE DE ASIGNACIÓN POR ESPECIALIDAD (no hay plantilla por especialidad ni por turno; no se inventan porcentajes).</p></div>
+</section>
+
+<section id="grupos">
+  <h2>FTE por grupos</h2>
+  <p class="lead">El reparto de la diapositiva 7 se conserva como referencia presentada (pendiente). Se compara con su fuente y con la reconstrucción desde los activos, sin forzar el cuadre.</p>
+  <div class="card"><h3 style="margin-top:0">Presentado vs fuente</h3><div class="tbl" style="max-height:none"><table id="grpPpt"></table></div></div>
+  <div class="card"><h3 style="margin-top:0">Reconstrucción técnica por grupo de mantenimiento (activo a activo)</h3><div class="tbl" style="max-height:none"><table id="grpTec"></table></div></div>
+</section>
+
+<section id="meb">
+  <h2>Nuevos productos – MEB ECO</h2>
+  <p class="lead">Ampliación de carga sobre el parque existente. Se cruza con SAP para no contar dos veces un activo ya incluido.</p>
+  <div class="card"><div class="tbl" style="max-height:none"><table id="mebTbl"></table></div></div>
+</section>
+
+<section id="averias">
+  <h2>Averías y paro (2025→actual)</h2>
+  <p class="lead" id="avLead"></p>
+  <div class="card"><h3 style="margin-top:0">Horas de paro por mes</h3><div id="avMes"></div></div>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">Por grupo de mantenimiento</h3><div class="tbl" style="max-height:420px"><table id="avGrp"></table></div></div>
+    <div class="card"><h3 style="margin-top:0">Top 25 activos por horas de paro</h3><div class="tbl" style="max-height:420px"><table id="avTop"></table></div></div>
+  </div>
+</section>
+
+<section id="traza">
+  <h2>Trazabilidad</h2>
+  <div class="flow"><span>PowerPoint</span><b>→</b><span>Resultado oficial</span><b>→</b><span>Cálculo</span><b>→</b><span>Grupo</span><b>→</b><span>Activo</span><b>→</b><span>Criterios</span><b>→</b><span>Dato original</span><b>→</b><span>Archivo fuente</span></div>
+  <div class="card"><div class="tbl" style="max-height:640px"><table id="trazTbl"></table></div></div>
+</section>
+
+<section id="pend">
+  <h2>Diferencias, pendientes y controles</h2>
+  <div class="card"><h3 style="margin-top:0">Diferencia detectada entre resultado presentado y fuente</h3><div class="tbl"><table id="difTbl"></table></div></div>
+  <div class="card"><h3 style="margin-top:0">Pendientes de validación</h3><div class="tbl"><table id="pendTbl"></table></div></div>
+  <div class="card"><h3 style="margin-top:0">Controles de coherencia</h3><div class="tbl"><table id="ctrlTbl"></table></div></div>
+</section>
+
+<section id="metodo">
+  <h2>Metodología y fuentes</h2>
+  <div class="card" id="metodoTxt"></div>
+  <div class="card"><h3 style="margin-top:0">Fuentes</h3><div class="tbl"><table id="fuenTbl"></table></div></div>
+</section>
+</main>
+
+<div class="drawer" id="drawer"></div>
+<div id="tip"></div>
+<script id="data" type="application/json">/*__DATA__*/null</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = s => document.querySelector(s);
+const nf = (v, d=0) => v==null||v===''||isNaN(v) ? '—' : Number(v).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = v => v==null ? '—' : (v*100).toLocaleString('es-ES',{maximumFractionDigits:1})+' %';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CLS = ['A','B','C','D'];
+const cvar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- tema ---------- */
+$('#themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = cur ? cur==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  try{localStorage.setItem('pk16-theme', dark?'light':'dark')}catch(e){}
+  renderAll();
+};
+try{const t=localStorage.getItem('pk16-theme'); if(t) document.documentElement.setAttribute('data-theme',t);}catch(e){}
+
+/* ---------- navegación ---------- */
+const TABS = [['resumen','Resumen'],['inventario','Inventario'],['criticidad','Criticidad'],['capacidad','FTE y escenarios'],['grupos','Grupos'],['meb','Nuevos productos'],['averias','Averías'],['traza','Trazabilidad'],['pend','Diferencias · pendientes · controles'],['metodo','Metodología y fuentes']];
+$('#nav').innerHTML = TABS.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join('');
+function go(k){ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k)); document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===k)); if(location.hash!=='#'+k) history.replaceState(null,'','#'+k); renderTab(k); }
+$('#nav').onclick = e => { if(e.target.dataset.k) go(e.target.dataset.k); };
+$('#hdrsub').textContent = `Respaldo técnico de ${D.meta.ppt} · datos del Excel ${D.meta.xlsx} · generado ${D.meta.generado}`;
+
+/* ---------- tooltip ---------- */
+const tip = $('#tip');
+function showTip(e, html){ tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(e.clientX+14, innerWidth-tip.offsetWidth-8); const y = Math.min(e.clientY+14, innerHeight-tip.offsetHeight-8); tip.style.left=x+'px'; tip.style.top=y+'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+function bindTips(root){ root.querySelectorAll('[data-tip]').forEach(el=>{ el.addEventListener('mousemove', e=>showTip(e, el.getAttribute('data-tip'))); el.addEventListener('mouseleave', hideTip); }); }
+
+/* ---------- estado y cálculo ---------- */
+const P0 = Object.assign({}, D.params);
+let P = Object.assign({}, D.params);
+const PARQ = D.assets.filter(a=>a.pq===1);
+function calc(p){
+  const fteCls = CLS.map(k => p['N_'+k]/p['RATIO_'+k]);
+  const base = fteCls.reduce((a,b)=>a+b,0);
+  const pm = (p.PUNTOS_PM + p.AVISOS)/p.PRODUCT;
+  const form = p.PLANTILLA*p.FORM_H/p.HORAS_PROD;
+  const sab = p.PERS_SAB*(p.SABADOS+p.FESTIVOS)/p.JORNADAS;
+  const sub = base+pm+form+sab;
+  const cb = [sub, base+pm, base][Number(p.COB_BASE)-1];
+  const cmin = cb*p.COB_MIN, cmax = cb*p.COB_MAX;
+  const nmin = sub+cmin, nmax = sub+cmax;
+  return {fteCls, base, pm, form, sab, sub, cb, cmin, cmax, nmin, nmax, pl:p.PLANTILLA, gmin:nmin-p.PLANTILLA, gmax:nmax-p.PLANTILLA, cobAct:p.PLANTILLA/sub};
+}
+function techCounts(){ const c={A:0,B:0,C:0,D:0}, pv={A:0,B:0,C:0,D:0}; PARQ.forEach(a=>{ if(c[a.cl]!=null){c[a.cl]++; if(a.pv==='S') pv[a.cl]++;} }); return {c,pv}; }
+const isScen = () => Object.keys(P0).some(k => Number(P[k])!==Number(P0[k]));
+
+/* ---------- estados ---------- */
+function stChip(s){ s = s==null?'':String(s); const u=s.toUpperCase();
+  let c='st-pend', i='●';
+  if(/^OK|RECONSTRUIDO|INCLUIDO EN PARQUE|DOCUMENTADA|DISPONIBLE/.test(u)){c='st-ok';i='✓';}
+  else if(/ERROR|DIFERENCIA|ABIERTA|NO DISPONIBLE/.test(u)){c='st-err';i='✕';}
+  else if(/REVISAR|PROVISIONAL|PARCIAL|TRAZABILIDAD|ALERTA|ORIENTATIVO|PROPUESTA/.test(u)){c='st-warn';i='▲';}
+  return s ? `<span class="chip ${c}">${i} ${esc(s)}</span>` : '';
+}
+const clsChip = (cl,pv) => cl && CLS.includes(cl) ? `<span class="cls ${cl}${pv==='S'?' prov':''}" title="${pv==='S'?'C provisional':'Clase '+cl}">${cl}</span>` : '<span class="muted">—</span>';
+
+/* ---------- gráficos SVG ---------- */
+function nice(max, n=5){ const raw=max/n, p=Math.pow(10,Math.floor(Math.log10(raw||1))), f=raw/p; const st=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; return {st, max:Math.ceil(max/st)*st}; }
+function vbars(el, items, opt={}){
+  const W = el.clientWidth || 420, H = opt.h || 220, m = {t:22,r:8,b:30,l:42};
+  const nk = nice(Math.max(...items.map(d=>d.v), 1)*1.08, 4), max = nk.max, iw=W-m.l-m.r, ih=H-m.t-m.b, bw=Math.min(56, iw/items.length*0.62);
+  let g='';
+  for(let v=0; v<=max+1e-9; v+=nk.st){ const y=m.t+ih-ih*v/max; g+=`<g class="grid"><line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}"/></g><text x="${m.l-6}" y="${y+4}" text-anchor="end">${nf(v, nk.st<1?1:0)}</text>`; }
+  items.forEach((d,i)=>{ const cx=m.l+iw/items.length*(i+.5), h=ih*d.v/max, y=m.t+ih-h;
+    g+=`<g data-tip="${esc(d.tip||'')}"><rect x="${cx-bw/2-6}" y="${m.t}" width="${bw+12}" height="${ih}" fill="transparent"/><path d="M${cx-bw/2},${m.t+ih} V${y+4} q0,-4 4,-4 H${cx+bw/2-4} q4,0 4,4 V${m.t+ih} Z" fill="${d.c}"/>`;
+    if(opt.labels!==false) g+=`<text class="val" x="${cx}" y="${y-5}" text-anchor="middle">${nf(d.v, opt.dec||0)}</text>`;
+    g+=`<text x="${cx}" y="${H-10}" text-anchor="middle">${esc(d.l)}</text></g>`; });
+  el.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="${esc(opt.aria||'Gráfico de barras')}">${g}</svg>`; bindTips(el);
+}
+function stackH(el, rows){
+  const W = el.clientWidth || 800, rh=24, m={t:6,r:60,b:6,l:200}, H=m.t+m.b+rows.length*(rh+6);
+  const max = Math.max(...rows.map(r=>CLS.reduce((a,k)=>a+r.p[k],0)),1), iw=W-m.l-m.r;
+  let g='';
+  rows.forEach((r,i)=>{ const y=m.t+i*(rh+6); let x=m.l; const tot=CLS.reduce((a,k)=>a+r.p[k],0);
+    g+=`<text x="${m.l-8}" y="${y+rh/2+4}" text-anchor="end">${esc(r.l)}</text>`;
+    CLS.forEach(k=>{ const w=iw*r.p[k]/max; if(w<=0) return; const ww=Math.max(w-2,1);
+      g+=`<rect data-tip="${esc(`<b>${r.l}</b><br>Clase ${k}: ${nf(r.p[k])} activos<br>FTE ${nf(r.f[k],2)}`)}" x="${x}" y="${y}" width="${ww}" height="${rh}" rx="3" fill="${cvar('--'+k)}"/>`; x+=w; });
+    g+=`<text class="val" x="${x+6}" y="${y+rh/2+4}">${nf(tot)}</text>`; });
+  el.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Activos por clase y grupo">${g}</svg>`; bindTips(el);
+}
+function waterfall(el, r){
+  const W = el.clientWidth || 520, H = 300, m={t:16,r:12,b:46,l:40};
+  const steps = [
+    ['Base criticidad', 0, r.base, 'A · Σ activos ÷ ratio'],
+    ['Preventivo + avisos', r.base, r.base+r.pm, 'B · (puntos PM + avisos) ÷ productividad'],
+    ['Formación', r.base+r.pm, r.base+r.pm+r.form, 'C · plantilla × h formación ÷ h productivas'],
+    ['Libranzas', r.base+r.pm+r.form, r.sub, 'D · personas × jornadas ÷ jornadas/FTE'],
+    ['Cobertura mín.', r.sub, r.nmin, 'E · base de cobertura × % mín.'],
+    ['Cobertura máx.', r.nmin, r.nmax, 'E · tramo hasta el % máx.'],
+    ['Necesidad', 0, r.nmax, 'F · necesidad mín.–máx.'],
+  ];
+  const nk = nice(Math.max(r.nmax, r.pl)*1.06, 5), max = nk.max, iw=W-m.l-m.r, ih=H-m.t-m.b, n=steps.length, bw=Math.min(54, iw/n*0.6);
+  const Y = v => m.t+ih-ih*v/max;
+  let g='';
+  for(let v=0; v<=max+1e-9; v+=nk.st){ g+=`<g class="grid"><line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/></g><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${nf(v)}</text>`; }
+  steps.forEach((s,i)=>{ const cx=m.l+iw/n*(i+.5), y0=Y(s[2]), y1=Y(s[1]);
+    const last = i===n-1, fill = last ? cvar('--s1-strong') : (i>=4 ? cvar('--s1-soft') : cvar('--s1'));
+    const tipTxt = last ? `<b>Necesidad total</b><br>${nf(r.nmin,1)} – ${nf(r.nmax,1)} FTE` : `<b>${s[0]}</b><br>+${nf(s[2]-s[1],2)} FTE (acumulado ${nf(s[2],1)})<br><span class="muted">${s[3]}</span>`;
+    g+=`<g data-tip="${esc(tipTxt)}"><rect x="${cx-bw/2-6}" y="${m.t}" width="${bw+12}" height="${ih}" fill="transparent"/><rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${Math.max(y1-y0,1)}" rx="3" fill="${fill}"/>`;
+    if(last) g+=`<line x1="${cx-bw/2}" x2="${cx+bw/2}" y1="${Y(r.nmin)}" y2="${Y(r.nmin)}" stroke="${cvar('--surface')}" stroke-width="2"/>`;
+    g+=`<text class="val" x="${cx}" y="${y0-5}" text-anchor="middle">${last? nf(r.nmin)+'–'+nf(r.nmax) : '+'+nf(s[2]-s[1],1)}</text>`;
+    g+=`<text x="${cx}" y="${H-28}" text-anchor="middle">${esc(s[0].split(' ')[0])}</text><text x="${cx}" y="${H-14}" text-anchor="middle">${esc(s[0].split(' ').slice(1).join(' '))}</text></g>`; });
+  const yp=Y(r.pl);
+  g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yp}" y2="${yp}" stroke="${cvar('--A')}" stroke-width="2" stroke-dasharray="5 4"/><text x="${m.l+iw/n+4}" y="${yp+16}" text-anchor="start" class="val">Plantilla ${nf(r.pl)} · GAP ${nf(r.gmin)}–${nf(r.gmax)} FTE</text>`;
+  el.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Waterfall de la necesidad de FTE">${g}</svg>`; bindTips(el);
+}
+
+/* ---------- RESUMEN ---------- */
+function renderResumen(){
+  const r = calc(P), of = D.of, t = techCounts();
+  const tiles = [
+    ['Parque oficial', nf(P.N_A+P.N_B+P.N_C+P.N_D), `PPT: ${nf(of.PARQUE)} activos (diap. 4)`],
+    ['Activos críticos A', nf(P.N_A), `PPT: ${nf(of.N_A)} (diap. 4 · 8)`],
+    ['FTE base criticidad', nf(r.base,2), `PPT: ${nf(of.FTE_BASE,2)} (diap. 4)`],
+    ['Necesidad total', `${nf(r.nmin)}–${nf(r.nmax)}`, `PPT: 115–125 (diap. 7) · 113–121 (diap. 5)`],
+    ['Plantilla nominal', nf(r.pl), `PPT: ~80 personas · cobertura ${pct(r.cobAct)}`],
+    ['GAP orientativo', `+${nf(r.gmin)} a +${nf(r.gmax)}`, `PPT: +34 (diap. 7) · +33 (diap. 5)`],
+  ];
+  $('#tiles').innerHTML = tiles.map(t=>`<div class="tile"><div class="lbl">${t[0]}</div><div class="val">${t[1]}</div><div class="ppt">${t[2]}</div></div>`).join('') + (isScen()?'<div class="tile" style="background:var(--warn-bg)"><div class="lbl">Atención</div><div class="val" style="font-size:16px">ESCENARIO</div><div class="ppt">Supuestos modificados: no es el resultado oficial</div></div>':'');
+  waterfall($('#wf'), r);
+  vbars($('#abcOf'), CLS.map((k,i)=>({l:k, v:P['N_'+k], c:cvar('--'+k), tip:`<b>Clase ${k}</b><br>${nf(P['N_'+k])} activos ÷ ${P['RATIO_'+k]} = ${nf(r.fteCls[i],2)} FTE`})), {aria:'Activos por clase oficial', h:210});
+  vbars($('#abcTec'), CLS.map(k=>({l:k, v:t.c[k], c:cvar('--'+k), tip:`<b>Clase ${k} (activo a activo)</b><br>${nf(t.c[k])} activos (${nf(t.pv[k])} provisionales)<br>${nf(t.c[k]/P['RATIO_'+k],2)} FTE`})), {aria:'Activos por clase activo a activo', h:210});
+  const ctrl = D.ctrl.rows||[], ok=ctrl.filter(x=>/^OK/.test(x[4])).length, rev=ctrl.filter(x=>/^REVISAR/.test(x[4])).length, err=ctrl.filter(x=>/^ERROR/.test(x[4])).length;
+  const tt = t.c.A+t.c.B+t.c.C+t.c.D, tf = CLS.reduce((a,k)=>a+t.c[k]/P['RATIO_'+k],0);
+  $('#msgs').innerHTML = [
+    `El parque oficial de <b>${nf(P.N_A+P.N_B+P.N_C+P.N_D)}</b> activos exige <b>${nf(r.base,1)} FTE</b> base solo por criticidad (A ${nf(P.N_A)} · B ${nf(P.N_B)} · C ${nf(P.N_C)} · D ${nf(P.N_D)}).`,
+    `Sumando preventivo y avisos (+${nf(r.pm,1)}), formación (+${nf(r.form,1)}), libranzas (+${nf(r.sab,1)}) y cobertura ${pct(P.COB_MIN)}–${pct(P.COB_MAX)}, la necesidad es de <b>${nf(r.nmin)}–${nf(r.nmax)} FTE</b>.`,
+    `Frente a ~${nf(r.pl)} personas, el GAP orientativo es de <b>${nf(r.gmin)}–${nf(r.gmax)} FTE</b>; la plantilla cubre el ${pct(r.cobAct)} de la necesidad antes de cobertura organizativa.`,
+    `La clase A (418) y los ratios son trazables; el reparto B/C/D y el reparto por grupos MEB son declarados: <b>trazabilidad incompleta</b> (ver Diferencias).`,
+    `El inventario fila a fila suma ${nf(tt)} activos y ${nf(tf,1)} FTE base: es un contraste técnico, no el resultado oficial.`,
+    `Controles: ${ok} OK · ${rev} REVISAR · ${err} ERROR.`
+  ].map(x=>`<li>${x}</li>`).join('');
+}
+
+/* ---------- INVENTARIO ---------- */
+const INV_COLS = [['id','ID'],['de','Descripción'],['gr','Grupo'],['li','Línea'],['ta','Tipo de activo'],['es','Estado'],['cl','Clase'],['sc','Score'],['avh','h paro'],['va','Validación']];
+let invSort = {k:'sc', d:-1}, invShown = 100, invRows = [];
+function uniq(k, arr=D.assets){ return [...new Set(arr.map(a=>a[k]).filter(Boolean))].sort(); }
+function buildInvFilters(){
+  const sel = (id,l,opts) => `<select id="${id}"><option value="">${l}: todos</option>${opts.map(o=>`<option>${esc(o)}</option>`).join('')}</select>`;
+  $('#invFilters').innerHTML = `<input type="search" id="fq" placeholder="Buscar ID, inventario, descripción, ubicación…">` +
+    sel('fpq','Parque',['En parque principal','Fuera del parque']) + sel('fgr','Grupo',uniq('gr')) + sel('fpg','Programa',uniq('pg')) + sel('fps','Proceso',uniq('ps')) +
+    sel('fta','Tipo',uniq('ta')) + sel('fcl','Clase',['A','B','C','D','C provisional']) + sel('fes','Estado',uniq('es')) +
+    `<label class="small"><input type="checkbox" id="fcb"> Solo cuellos</label><label class="small"><input type="checkbox" id="fmt"> Solo montaje principal</label>`;
+  $('#invFilters').querySelectorAll('input,select').forEach(el=>el.addEventListener('input', ()=>{invShown=100; renderInv();}));
+}
+function filtInv(){
+  const q = $('#fq').value.trim().toUpperCase(), pq=$('#fpq').value, gr=$('#fgr').value, pg=$('#fpg').value, ps=$('#fps').value, ta=$('#fta').value, cl=$('#fcl').value, es=$('#fes').value, cb=$('#fcb').checked, mt=$('#fmt').checked;
+  return D.assets.filter(a => (!q || (a.id+' '+a.inv+' '+a.de+' '+a.ub+' '+a.se).toUpperCase().includes(q)) && (!pq || (pq==='En parque principal')===(a.pq===1)) && (!gr||a.gr===gr) && (!pg||a.pg===pg) && (!ps||a.ps===ps) && (!ta||a.ta===ta) && (!es||a.es===es) && (!cl || (cl==='C provisional' ? (a.cl==='C'&&a.pv==='S') : a.cl===cl)) && (!cb||a.cb==='S') && (!mt||a.mt==='S'));
+}
+function renderInv(){
+  invRows = filtInv();
+  const k=invSort.k, d=invSort.d;
+  invRows.sort((a,b)=>{ const x=a[k], y=b[k]; if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; return (typeof x==='number' ? x-y : String(x).localeCompare(String(y)))*d; });
+  const nParq = invRows.filter(a=>a.pq===1).length, fte = invRows.reduce((s,a)=>s+(a.pq===1?(a.ft||0):0),0);
+  $('#invCount').textContent = `${nf(invRows.length)} registros · ${nf(nParq)} en parque principal · ${nf(fte,2)} FTE base (ratios oficiales)`;
+  const head = '<thead><tr>'+INV_COLS.map(([k,l])=>`<th class="sort ${['sc','avh'].includes(k)?'n':''}" data-k="${k}">${l}${invSort.k===k?(invSort.d>0?' ▲':' ▼'):''}</th>`).join('')+'</tr></thead>';
+  const body = invRows.slice(0,invShown).map(a=>`<tr class="click" data-id="${esc(a.id)}"><td>${esc(a.id)}</td><td>${esc(a.de)}</td><td>${esc(a.gr)}</td><td class="small">${esc(a.li)}</td><td class="small">${esc(a.ta)}</td><td class="small">${esc(a.es)}</td><td>${clsChip(a.cl,a.pv)}</td><td class="n">${nf(a.sc,2)}</td><td class="n">${nf(a.avh,1)}</td><td>${stChip(a.va)}</td></tr>`).join('');
+  $('#invTbl').innerHTML = head+'<tbody>'+body+'</tbody>';
+  $('#invMore').style.display = invRows.length>invShown ? '' : 'none';
+  $('#invTbl').querySelectorAll('th.sort').forEach(th=>th.onclick=()=>{ invSort = {k:th.dataset.k, d: invSort.k===th.dataset.k ? -invSort.d : -1}; renderInv(); });
+  $('#invTbl').querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>openAsset(tr.dataset.id));
+}
+$('#invMore').onclick = ()=>{ invShown += 200; renderInv(); };
+$('#invCsv').onclick = ()=>{
+  const cols = ['id','eq','inv','de','ub','se','tp','ta','te','fa','mo','an','es','pq','me','pg','pr','li','ps','gr','cb','mt','mb','abc','avn','avh','c1','c2','c3','c4','c5','sc','cl','pv','pt','ft','mv','va','fu','ho','fi'];
+  const lines = [cols.join(';')].concat(invRows.map(a=>cols.map(c=>{ const v=a[c]==null?'':String(a[c]); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(';')));
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8'}); const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download='PK16_inventario_filtrado.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(u),2000);
+};
+function openAsset(id){
+  const a = D.assets.find(x=>x.id===id); if(!a) return;
+  const crit = [['C1 Producción',a.c1,4],['C2 Seguridad / calidad',a.c2,2],['C3 Unicidad / cuello',a.c3,2],['C4 Averías 2025→',a.c4,1.5],['C5 Obsolescencia',a.c5,0.5]];
+  const kv = (l,v)=>`<div>${l}</div><div>${v==null||v===''?'<span class="muted">DATO NO DISPONIBLE</span>':v}</div>`;
+  $('#drawer').innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><div class="small muted">${esc(a.id)}</div><h2 style="margin:2px 0 6px">${esc(a.de)}</h2></div><button class="btn" id="dClose">Cerrar ✕</button></div>
+   <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">${clsChip(a.cl,a.pv)} <b>${a.pq?('Score '+nf(a.sc,2)+' / 10'):'Fuera del parque principal'}</b> ${stChip(a.va)}</div>
+   ${a.pq?`<div class="card"><div class="small" style="margin-bottom:8px">${esc(a.mv||'')}</div>${crit.map(c=>`<div style="display:grid;grid-template-columns:170px 1fr 60px;gap:8px;align-items:center;margin:5px 0"><span class="small">${c[0]}</span><div class="bar"><i style="width:${(c[1]||0)/c[2]*100}%"></i></div><span class="small n">${nf(c[1],2)} / ${c[2]}</span></div>`).join('')}
+     <div class="small muted">Tipología ${esc(a.ti)} · ${esc(a.tn)}${a.rf?' · Regla: '+esc(a.rf):''}</div></div>`:''}
+   <h3>Identificación y clasificación</h3><div class="kv">${kv('Equipo SAP',esc(a.eq))}${kv('Inventario',esc(a.inv))}${kv('Ubicación técnica',esc(a.ub))}${kv('Sección SAP',esc(a.se))}${kv('Equipo padre',esc(a.pa))}${kv('Tipo objeto SAP',esc(a.tp))}${kv('Tipo de activo',esc(a.ta))}${kv('Tecnología',esc(a.te))}${kv('Marca / modelo',esc([a.fa,a.mo].filter(Boolean).join(' · ')))}${kv('Año puesta servicio',a.an)}${kv('Programa',esc(a.pg))}${kv('Producto',esc(a.pr))}${kv('Línea',esc(a.li))}${kv('Proceso',esc(a.ps))}${kv('Grupo mantenimiento',esc(a.gr))}${kv('Estado',esc(a.es))}${kv('Motivo del estado',esc(a.me))}</div>
+   <h3>Evidencias</h3><div class="kv">${kv('Cuello de botella',a.cb==='S'?'Sí · '+esc(a.cbd):'No')}${kv('Montaje principal',a.mt==='S'?'Sí':'No')}${kv('MEB crítico',a.mb==='S'?'Sí':'No')}${kv('SAP Indicador ABC',esc(a.abc))}${kv('Averías 2025→',a.avn?nf(a.avn)+' avisos · '+nf(a.avh,1)+' h · máx. '+nf(a.avx)+' min':'Sin registros en el periodo')}${kv('Criticidad previa (MAESTRO_CRITICIDAD)',esc(a.cpm))}${kv('Criticidad previa (INTEGRAL)',esc(a.cpi))}${kv('Puntos equivalentes',nf(a.pt,1))}${kv('FTE equivalente',nf(a.ft,3))}</div>
+   <h3>Trazabilidad al dato original</h3><div class="kv">${kv('Archivo',esc(a.fu))}${kv('Hoja',esc(a.ho))}${kv('Fila',a.fi)}${kv('Depuración SAP previa',esc(a.dp))}</div>`;
+  $('#drawer').classList.add('on'); $('#dClose').onclick=()=>$('#drawer').classList.remove('on');
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') $('#drawer').classList.remove('on'); });
+
+/* ---------- CRITICIDAD ---------- */
+function renderCrit(){
+  $('#lgABC').innerHTML = CLS.map(k=>`<span><i style="background:${cvar('--'+k)}"></i>Clase ${k}</span>`).join('') + '<span class="muted">Barras: nº de activos del parque por grupo (activo a activo)</span>';
+  const g = {};
+  PARQ.forEach(a=>{ g[a.gr] = g[a.gr] || {p:{A:0,B:0,C:0,D:0}, f:{A:0,B:0,C:0,D:0}}; if(g[a.gr].p[a.cl]!=null){ g[a.gr].p[a.cl]++; g[a.gr].f[a.cl]+=1/P['RATIO_'+a.cl]; } });
+  const rows = Object.entries(g).map(([l,v])=>({l, p:v.p, f:v.f})).sort((a,b)=>CLS.reduce((s,k)=>s+b.p[k],0)-CLS.reduce((s,k)=>s+a.p[k],0));
+  stackH($('#stackGrp'), rows);
+  const cnt = {}; PARQ.forEach(a=>cnt[a.ti]=(cnt[a.ti]||0)+1);
+  $('#tipTbl').innerHTML = '<thead><tr><th>Código</th><th>Tipología</th><th class="n">C1</th><th class="n">C2</th><th class="n">C3</th><th>Datos</th><th class="n">Activos</th></tr></thead><tbody>'+D.tipologias.map(t=>`<tr title="${esc(t[6])}"><td>${t[0]}</td><td>${esc(t[1])}</td><td class="n">${t[2]}</td><td class="n">${t[3]}</td><td class="n">${t[4]}</td><td>${t[5]==='S'?'Suficientes':stChip('PROVISIONAL')}</td><td class="n">${nf(cnt[t[0]]||0)}</td></tr>`).join('')+'</tbody>';
+  const top = PARQ.slice().sort((a,b)=>(b.sc||0)-(a.sc||0)).slice(0,40);
+  $('#topSc').innerHTML = '<thead><tr><th>Activo</th><th>Grupo</th><th>Clase</th><th class="n">Score</th></tr></thead><tbody>'+top.map(a=>`<tr class="click" data-id="${esc(a.id)}"><td>${esc(a.de)}</td><td class="small">${esc(a.gr)}</td><td>${clsChip(a.cl,a.pv)}</td><td class="n">${nf(a.sc,2)}</td></tr>`).join('')+'</tbody>';
+  $('#topSc').querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>openAsset(tr.dataset.id));
+}
+
+/* ---------- CAPACIDAD / ESCENARIOS ---------- */
+const PDEF = [['N_A','Activos clase A',1],['N_B','Activos clase B',1],['N_C','Activos clase C',1],['N_D','Activos clase D',1],['RATIO_A','Ratio A (activos/FTE)',1],['RATIO_B','Ratio B',1],['RATIO_C','Ratio C',1],['RATIO_D','Ratio D',1],['PUNTOS_PM','Puntos de preventivo / año',100],['AVISOS','Avisos / año',100],['PRODUCT','Productividad PM+avisos por FTE',100],['PLANTILLA','Plantilla nominal (personas)',1],['HORAS_PROD','Horas productivas por FTE',10],['FORM_H','Horas de formación por persona',1],['PERS_SAB','Personas por sábado',1],['SABADOS','Sábados al año',1],['FESTIVOS','Festivos trabajados',1],['JORNADAS','Jornadas efectivas por FTE',1],['COB_MIN','Cobertura mínima (0–1)',0.01],['COB_MAX','Cobertura máxima (0–1)',0.01]];
+function buildParams(){
+  $('#params').innerHTML = PDEF.map(([k,l,s])=>`<label for="p_${k}">${l}</label><input id="p_${k}" type="number" step="${s}" value="${P[k]}">`).join('') +
+   `<label for="p_COB_BASE">Base de la cobertura</label><select id="p_COB_BASE"><option value="1">1 · Subtotal (diap. 2)</option><option value="2">2 · Base + PM (Excel)</option><option value="3">3 · Solo base (diap. 5)</option></select>`;
+  $('#p_COB_BASE').value = P.COB_BASE;
+  $('#params').querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{ const k=el.id.slice(2); const v=Number(el.value); if(!isNaN(v) && v>0 || k==='FESTIVOS' && v>=0){ P[k]=v; } renderCap(); }));
+}
+$('#resetP').onclick = ()=>{ P = Object.assign({}, P0); buildParams(); renderCap(); };
+document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ CLS.forEach(k=>{ P['RATIO_'+k] = b.dataset.r==='min' ? P0['RMIN_'+k] : (P0['RMIN_'+k]+P0['RATIO_'+k])/2; }); buildParams(); renderCap(); });
+function renderCap(){
+  const r = calc(P), o = D.of;
+  $('#params').querySelectorAll('input,select').forEach(el=>{ const k=el.id.slice(2); el.classList.toggle('chg', Number(P[k])!==Number(P0[k])); });
+  $('#scenWarn').innerHTML = isScen() ? '<div class="warnbox">▲ ESCENARIO: hay supuestos distintos de los oficiales. Estos resultados no sustituyen al PowerPoint.</div>' : '';
+  const row = (cap,l,v,ppt,fx,d=2,isP=false)=>{ const diff = ppt==null||v==null ? null : v-ppt; const tol = isP?0.01:0.5; const st = ppt==null ? '' : (Math.abs(diff)<=tol ? stChip('OK') : stChip('DIFERENCIA')); return `<tr><td><b>${cap}</b></td><td>${l}<div class="note">${fx}</div></td><td class="n"><b>${isP?pct(v):nf(v,d)}</b></td><td class="n of">${ppt==null?'—':(isP?pct(ppt):nf(ppt,ppt%1?2:0))}</td><td>${st}</td></tr>`; };
+  $('#capTbl').innerHTML = '<thead><tr><th>Capa</th><th>Concepto</th><th class="n">Modelo</th><th class="n">PPT</th><th>Estado</th></tr></thead><tbody>'+
+    row('A','FTE base por criticidad',r.base,o.FTE_BASE,'Σ activos clase ÷ ratio') + row('B','Preventivo + avisos',r.pm,o.W_PM,'(puntos PM + avisos) ÷ productividad · TPM no sumado') +
+    row('C','Formación',r.form,o.W_FORM,'plantilla × h formación ÷ h productivas') + row('D','Sábados / libranzas',r.sab,o.W_SAB,'personas × (sábados + festivos) ÷ jornadas') +
+    row('','Subtotal A+B+C+D',r.sub,null,'') + row('E','Cobertura mínima',r.cmin,o.W_COB_MIN,'base de cobertura × % mín.') + row('E','Cobertura máxima',r.cmax,o.W_COB_MAX,'base de cobertura × % máx.') +
+    row('F','Necesidad total mínima',r.nmin,o.S7_REF_MIN,'subtotal + E mín. (diap. 7)') + row('F','Necesidad total máxima',r.nmax,o.S7_REF_MAX,'subtotal + E máx. (diap. 7)') +
+    row('G','Plantilla nominal',r.pl,o.PLANTILLA,'personas (≠ FTE productivos)',0) + row('H','GAP mínimo (orientativo)',r.gmin,o.S7_GAP,'F mín. − G (diap. 7)') + row('H','GAP máximo (orientativo)',r.gmax,null,'F máx. − G (no presentado)') +
+    row('','Cobertura actual',r.cobAct,o.COB_ACTUAL,'plantilla ÷ subtotal',2,true) + '</tbody>';
+  const sub=r.sub, bases=[['1 · Subtotal (método diap. 2)',sub,'115–125 · 80 %'],['2 · Base + PM (Excel DIMENSIONAMIENTO)',r.base+r.pm,'GAP +34 · 114–124'],['3 · Solo base (waterfall diap. 5)',r.base,'+13/+21 · 113–121 · GAP +33']];
+  $('#cobTbl').innerHTML = '<thead><tr><th>Base</th><th class="n">Cobertura</th><th class="n">Necesidad</th><th class="n">GAP</th><th>Reproduce</th></tr></thead><tbody>'+bases.map((b,i)=>`<tr${Number(P.COB_BASE)===i+1?' class="sup"':''}><td>${b[0]}</td><td class="n">${nf(b[1]*P.COB_MIN,1)}–${nf(b[1]*P.COB_MAX,1)}</td><td class="n">${nf(sub+b[1]*P.COB_MIN,1)}–${nf(sub+b[1]*P.COB_MAX,1)}</td><td class="n">${nf(sub+b[1]*P.COB_MIN-P.PLANTILLA,1)}–${nf(sub+b[1]*P.COB_MAX-P.PLANTILLA,1)}</td><td class="small">${b[2]}</td></tr>`).join('')+'</tbody>';
+  const disp = P.PLANTILLA - r.form - r.sab;
+  $('#realTbl').innerHTML = '<tbody>'+[
+    ['Personas nominales',nf(P.PLANTILLA),'PENDIENTE DE VALIDACIÓN'],['− Formación',nf(-r.form,2),''],['− Descanso compensatorio (libranzas)',nf(-r.sab,2),''],
+    ['Capacidad disponible antes de ausencias',nf(disp,2),''],['Capacidad efectiva con cobertura mín. / máx.',`${nf(disp/(1+P.COB_MIN),1)} / ${nf(disp/(1+P.COB_MAX),1)}`,'ORIENTATIVO'],
+    ['Necesidad del parque + carga planificada (A+B)',nf(r.base+r.pm,2),''],['Capacidad efectiva ÷ necesidad A+B',`${pct(disp/(1+P.COB_MAX)/(r.base+r.pm))} – ${pct(disp/(1+P.COB_MIN)/(r.base+r.pm))}`,'ORIENTATIVO']
+  ].map(x=>`<tr><td>${x[0]}</td><td class="n"><b>${x[1]}</b></td><td>${stChip(x[2])}</td></tr>`).join('')+'</tbody>';
+  renderResumen();
+}
+
+/* ---------- GRUPOS ---------- */
+function renderGrupos(){
+  const ppt = Object.fromEntries(D.grupos_ppt), base = calc(P0).base;
+  let sumP=0, sumD=0;
+  const rows = D.secciones.map(s=>{ const f = s[1]/12+s[2]/20+s[3]/35+s[4]/60+s[5]/12; sumD+=f; const p=ppt[s[0]]; sumP+=p||0; const ok=Math.abs(f-p)<=0.01; return `<tr><td><b>${esc(s[0])}</b></td><td class="n of">${nf(p,2)}</td><td class="n">${s.slice(1,6).join(' / ')}</td><td class="n">${nf(f,2)}</td><td>${ok?stChip('OK'):stChip('DIFERENCIA')}</td><td class="small">${s[5]?'A y A_MEB suman el mismo valor: posible doble conteo':''}</td></tr>`; }).join('');
+  $('#grpPpt').innerHTML = '<thead><tr><th>Grupo</th><th class="n">FTE diap. 7</th><th class="n">A / B / C / D / A_MEB (fuente)</th><th class="n">FTE fuente</th><th>Estado</th><th>Observación</th></tr></thead><tbody>'+rows+
+    `<tr><td>SERV. COMUNES</td><td class="n of">0,00</td><td></td><td></td><td>${stChip('TRAZABILIDAD INCOMPLETA')}</td><td class="small">Celda vacía en el gráfico</td></tr>`+
+    `<tr><td><b>Sin asignar</b></td><td class="n">${nf(base-sumP,2)}</td><td></td><td class="n">${nf(base-sumD,2)}</td><td>${stChip('PENDIENTE')}</td><td class="small">No se completa artificialmente (la fuente lo cierra como 'RESTO PLANTA')</td></tr></tbody>`;
+  const g={};
+  PARQ.forEach(a=>{ const x = g[a.gr] = g[a.gr] || {n:0,A:0,B:0,C:0,D:0,pv:0,pt:0,f:0}; x.n++; if(x[a.cl]!=null) x[a.cl]++; if(a.pv==='S') x.pv++; x.pt+=a.pt||0; x.f+= a.cl? 1/P['RATIO_'+a.cl]:0; });
+  const tot = Object.values(g).reduce((s,x)=>s+x.f,0);
+  $('#grpTec').innerHTML = '<thead><tr><th>Grupo</th><th class="n">Activos</th><th class="n">A</th><th class="n">B</th><th class="n">C</th><th class="n">D</th><th class="n">Provisionales</th><th class="n">Puntos eq.</th><th class="n">FTE base</th><th class="n">% FTE</th><th>Estado</th></tr></thead><tbody>'+
+    Object.entries(g).sort((a,b)=>b[1].f-a[1].f).map(([k,x])=>`<tr><td><b>${esc(k)}</b></td><td class="n">${nf(x.n)}</td><td class="n">${nf(x.A)}</td><td class="n">${nf(x.B)}</td><td class="n">${nf(x.C)}</td><td class="n">${nf(x.D)}</td><td class="n">${nf(x.pv)}</td><td class="n">${nf(x.pt,1)}</td><td class="n"><b>${nf(x.f,2)}</b></td><td class="n">${pct(x.f/tot)}</td><td>${x.pv?stChip('PROVISIONAL'):stChip('PROPUESTA TÉCNICA')}</td></tr>`).join('') + `<tr><td><b>TOTAL</b></td><td class="n"><b>${nf(PARQ.length)}</b></td><td colspan="6"></td><td class="n"><b>${nf(tot,2)}</b></td><td class="n">100 %</td><td></td></tr></tbody>`;
+}
+
+/* ---------- MEB ---------- */
+function renderMeb(){
+  const map = {'KMM':'KMM (MEB)','EBOX':'EBOX (MEB)','Conjunto Diferencial':'CONJ. DIFERENCIAL (MEB)','Manguetas':'MANGUETAS (MEB)','Aluminio GGH/MGH':'ALUMINIO GGH/MGH (MEB)'};
+  const of = {}; D.meb_of.forEach(r=>{ of[r[0]] = (of[r[0]]||0) + r[3]; });
+  const ppt = Object.fromEntries(D.grupos_ppt), pk = {'KMM':'KMM','EBOX':'EBOX','Conjunto Diferencial':'CONJ. DIF.','Manguetas':'MANGUETAS','Aluminio GGH/MGH':'ALUMINIO'};
+  const rows = Object.entries(map).map(([p,g])=>{ const all = D.assets.filter(a=>a.gr===g), parq = all.filter(a=>a.pq===1), idn = parq.filter(a=>a.mt==='S'||a.mb==='S').length, f = parq.reduce((s,a)=>s+(a.cl?1/P['RATIO_'+a.cl]:0),0), d = idn-of[p];
+    const sit = idn===0 ? 'PENDIENTE – sin inventario identificado' : d===0 ? 'INCLUIDO EN PARQUE (cuadra)' : d<0 ? `PARCIAL – faltan ${-d}` : `INCLUIDO – ${d} más que el oficial`;
+    return `<tr><td><b>${p}</b></td><td class="n of">${of[p]}</td><td class="n">${idn}</td><td class="n">${all.length}</td><td class="n">${parq.length}</td><td class="n">${all.length-parq.length}</td><td class="n">${nf(f,2)}</td><td class="n of">${nf(ppt[pk[p]],2)}</td><td>${stChip(sit)}</td></tr>`; }).join('');
+  $('#mebTbl').innerHTML = '<thead><tr><th>Producto</th><th class="n">Críticos oficiales</th><th class="n">Críticos identificados</th><th class="n">Registros SAP</th><th class="n">En parque</th><th class="n">Excluidos / componentes</th><th class="n">FTE técnico</th><th class="n">FTE diap. 7</th><th>Situación</th></tr></thead><tbody>'+rows+'</tbody>';
+}
+
+/* ---------- AVERÍAS ---------- */
+function renderAv(){
+  $('#avLead').textContent = `${nf(D.averias_total.n)} registros y ${nf(D.averias_total.h,0)} h de máquina parada entre ${D.meta.periodo_ini} y ${D.meta.periodo_fin} (export SAP; excluye montaje y TPM). Las horas son de máquina, no de mano de obra.`;
+  vbars($('#avMes'), D.averias_mes.map(m=>({l:m.MES.slice(2), v:m.h, c:cvar('--s1'), tip:`<b>${m.MES}</b><br>${nf(m.n)} registros<br>${nf(m.h,1)} h de paro`})), {labels:false, h:240, aria:'Horas de paro por mes'});
+  const g={}; PARQ.forEach(a=>{ if(!a.avh) return; const x=g[a.gr]=g[a.gr]||{n:0,h:0,k:0}; x.n+=a.avn; x.h+=a.avh; x.k++; });
+  $('#avGrp').innerHTML = '<thead><tr><th>Grupo</th><th class="n">Activos con avería</th><th class="n">Registros</th><th class="n">Horas</th></tr></thead><tbody>'+Object.entries(g).sort((a,b)=>b[1].h-a[1].h).map(([k,x])=>`<tr><td>${esc(k)}</td><td class="n">${nf(x.k)}</td><td class="n">${nf(x.n)}</td><td class="n">${nf(x.h,1)}</td></tr>`).join('')+'</tbody>';
+  const top = PARQ.filter(a=>a.avh).sort((a,b)=>b.avh-a.avh).slice(0,25);
+  $('#avTop').innerHTML = '<thead><tr><th>Activo</th><th>Clase</th><th class="n">Averías</th><th class="n">Horas</th><th>Cuello</th></tr></thead><tbody>'+top.map(a=>`<tr class="click" data-id="${esc(a.id)}"><td>${esc(a.de)}<div class="note">${esc(a.gr)}</div></td><td>${clsChip(a.cl,a.pv)}</td><td class="n">${nf(a.avn)}</td><td class="n">${nf(a.avh,1)}</td><td>${a.cb==='S'?'Sí':''}</td></tr>`).join('')+'</tbody>';
+  $('#avTop').querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>openAsset(tr.dataset.id));
+}
+
+/* ---------- TABLAS DEL EXCEL ---------- */
+function tableFrom(el, t, opts={}){
+  if(!t || !t.cols || !t.cols.length){ el.innerHTML = '<tbody><tr><td class="muted">Tabla no disponible (Excel sin recalcular).</td></tr></tbody>'; return; }
+  const st = opts.status ?? -1, ord = opts.order || t.cols.map((_,i)=>i);
+  el.innerHTML = '<thead><tr>'+ord.map(i=>`<th>${esc(t.cols[i])}</th>`).join('')+'</tr></thead><tbody>'+t.rows.map(row=>'<tr>'+ord.map(i=>[row[i],i]).map(([v,i])=>{ if(i===st) return `<td>${stChip(v)}</td>`; if(typeof v==='number') return `<td class="n">${nf(v, Math.abs(v)<1&&v!==0?3:(v%1?2:0))}</td>`; return `<td${opts.of===i?' class="of"':''}>${esc(v)}</td>`; }).join('')+'</tr>').join('')+'</tbody>';
+}
+function renderTraza(){ tableFrom($('#trazTbl'), D.traz, {status:11, of:2, order:[0,1,2,3,4,5,11,6,7,8,9,10,12]}); }
+function renderPend(){ tableFrom($('#difTbl'), D.dif, {status:11, of:2, order:[0,1,2,3,4,11,7,8,9,10,5,6]}); tableFrom($('#pendTbl'), D.pend, {status:8, order:[0,1,4,8,2,3,5,6,7]}); tableFrom($('#ctrlTbl'), D.ctrl, {status:4}); }
+function renderMetodo(){
+  $('#metodoTxt').innerHTML = `<h3 style="margin-top:0">Principio</h3><p>El PowerPoint final es el resultado oficial. El modelo lo reproduce con datos, cálculos y criterios visibles; las diferencias con las fuentes se documentan, nunca se corrigen en silencio. El orden de análisis es: inventario → criticidad → carga → disponibilidad real → necesidad → GAP.</p>
+  <h3>Inventario</h3><p>SAP completo (2.857 equipos) con la depuración previa (779 periféricos excluidos) y una depuración ampliada pendiente de validar (palets, mesas, utillajes). Clasificación por ubicación técnica: primero la ubicación más específica, después la superior. Montaje convencional según el fichero de montaje actualizado; montaje MEB según SAP. Componentes, agrupadores, standby, posibles bajas y cuellos sin equivalencia se conservan con su estado.</p>
+  <h3>Criticidad</h3><p>Cinco criterios (producción 0–4, seguridad/calidad 0–2, unicidad/cuello 0–2, averías 2025→ 0–1,5, obsolescencia 0–0,5). Cuello de botella, montaje principal y MEB crítico confirmados = A. La clase D exige bajo impacto demostrado: sin datos suficientes el activo queda como C provisional.</p>
+  <h3>Dimensionamiento</h3><p>FTE de la clase = activos ÷ ratio (A 12 · B 20 · C 35 · D 60, criterio interno de cartera). A la base se suman preventivo + avisos, formación, libranzas (descanso compensatorio, no vacaciones) y una cobertura organizativa del 15–25 % que no reincluye las capas anteriores. El TPM se informa como actividad operativa y no se suma. El GAP es orientativo mientras plantilla, turnos y especialidades no estén validados.</p>
+  <h3>Referencias externas</h3><ul>${D.refs.map(r=>`<li><a href="${esc(r[1])}" target="_blank" rel="noopener">${esc(r[0])}</a> – ${esc(r[2])}</li>`).join('')}</ul>
+  <p class="note">Estas referencias respaldan una metodología basada en carga de trabajo, preventivo y correctivo, criticidad, recursos, planificación, benchmarking y contexto operativo. Los ratios A/B/C/D son un criterio interno de cartera, no un ratio universal publicado literalmente por SMRP o NASA.</p>`;
+  tableFrom($('#fuenTbl'), D.fuentes, {status:9});
+}
+
+/* ---------- render ---------- */
+const RENDER = {resumen:renderResumen, inventario:renderInv, criticidad:renderCrit, capacidad:renderCap, grupos:renderGrupos, meb:renderMeb, averias:renderAv, traza:renderTraza, pend:renderPend, metodo:renderMetodo};
+function renderTab(k){ (RENDER[k]||(()=>{}))(); }
+function renderAll(){ const k = (location.hash||'#resumen').slice(1); renderTab(k); }
+buildInvFilters(); buildParams();
+addEventListener('resize', ()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(renderAll,150); });
+go((location.hash||'#resumen').slice(1) in RENDER ? (location.hash||'#resumen').slice(1) : 'resumen');
+</script>
+</body>
+</html>
